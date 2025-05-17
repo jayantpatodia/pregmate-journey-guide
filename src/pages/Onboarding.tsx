@@ -8,13 +8,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { updateUserData, setOnboarded } = usePregnancy();
   const [currentStep, setCurrentStep] = useState(0);
   const [name, setName] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [inputMethod, setInputMethod] = useState<'weeks' | 'date'>('weeks');
+  const [pregnancyWeek, setPregnancyWeek] = useState('');
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [language, setLanguage] = useState<Language>('English');
   const [selectedGoals, setSelectedGoals] = useState<PregnancyGoal[]>([]);
   
@@ -58,18 +65,32 @@ const Onboarding = () => {
   };
 
   const completeOnboarding = () => {
-    // Calculate currentWeek from due date
-    const today = new Date();
-    const dueDateObj = new Date(dueDate);
+    let currentWeek: number;
+    let dueDate: Date;
     
-    // Pregnancy is typically 40 weeks
-    const diffTime = dueDateObj.getTime() - today.getTime();
-    const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
-    const currentWeek = 40 - diffWeeks;
-
+    if (inputMethod === 'weeks') {
+      // If user entered pregnancy week
+      currentWeek = parseInt(pregnancyWeek);
+      
+      // Calculate due date based on current week (40 weeks is full term)
+      const today = new Date();
+      const remainingWeeks = 40 - currentWeek;
+      dueDate = new Date(today);
+      dueDate.setDate(today.getDate() + (remainingWeeks * 7));
+    } else {
+      // If user selected due date
+      dueDate = selectedDate as Date;
+      
+      // Calculate current week from due date
+      const today = new Date();
+      const diffTime = dueDate.getTime() - today.getTime();
+      const diffWeeks = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 7));
+      currentWeek = 40 - diffWeeks;
+    }
+    
     updateUserData({
       name,
-      dueDate: dueDateObj,
+      dueDate,
       currentWeek: Math.max(1, Math.min(40, currentWeek)),
       language,
       goals: selectedGoals,
@@ -104,17 +125,76 @@ const Onboarding = () => {
       case 1:
         return (
           <div className="space-y-4">
-            <h2 className="text-2xl font-semibold text-center text-pregbuddy-dark">Your Due Date</h2>
+            <h2 className="text-2xl font-semibold text-center text-pregbuddy-dark">Your Pregnancy</h2>
             <p className="text-center text-gray-500">This helps us personalize your journey</p>
+            
             <div className="space-y-3 mt-6">
-              <Label htmlFor="due-date">When is your baby due?</Label>
-              <Input
-                id="due-date"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="rounded-full"
-              />
+              <div className="flex justify-between mb-4">
+                <Button 
+                  variant={inputMethod === 'weeks' ? "default" : "outline"}
+                  onClick={() => setInputMethod('weeks')}
+                  className="w-1/2 mr-2 rounded-full"
+                >
+                  I know my weeks
+                </Button>
+                <Button 
+                  variant={inputMethod === 'date' ? "default" : "outline"}
+                  onClick={() => setInputMethod('date')}
+                  className="w-1/2 ml-2 rounded-full"
+                >
+                  I know my due date
+                </Button>
+              </div>
+              
+              {inputMethod === 'weeks' ? (
+                <div className="space-y-3">
+                  <Label htmlFor="pregnancy-week">How many weeks pregnant are you?</Label>
+                  <Input
+                    id="pregnancy-week"
+                    type="number"
+                    min="1"
+                    max="40"
+                    placeholder="Enter week (1-40)"
+                    value={pregnancyWeek}
+                    onChange={(e) => setPregnancyWeek(e.target.value)}
+                    className="rounded-full"
+                  />
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <Label htmlFor="due-date">When is your baby due?</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        id="due-date"
+                        className={cn(
+                          "w-full justify-start text-left font-normal rounded-full",
+                          !selectedDate && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {selectedDate ? format(selectedDate, "PPP") : <span>Select due date</span>}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={setSelectedDate}
+                        initialFocus
+                        className={cn("p-3 pointer-events-auto")}
+                        disabled={(date) => {
+                          // Can't pick dates in the past
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          return date < today;
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
             </div>
           </div>
         );
@@ -172,7 +252,9 @@ const Onboarding = () => {
       case 0:
         return name.trim().length > 0;
       case 1:
-        return dueDate.trim().length > 0;
+        return inputMethod === 'weeks' 
+          ? pregnancyWeek && parseInt(pregnancyWeek) >= 1 && parseInt(pregnancyWeek) <= 40
+          : selectedDate !== undefined;
       case 2:
         return language !== null;
       case 3:
