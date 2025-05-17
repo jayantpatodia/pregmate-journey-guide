@@ -79,7 +79,7 @@ export function PregnancyProvider({ children }: { children: ReactNode }) {
         userData, 
         isOnboarded, 
         updateUserData, 
-        setOnboarded, 
+        setOnboarded: setIsOnboarded, // Fix: Changed to use setIsOnboarded
         calculateProgress 
       }}
     >
