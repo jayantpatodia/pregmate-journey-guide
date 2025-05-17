@@ -1,6 +1,8 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { Image } from 'lucide-react';
 
 interface DailyTipProps {
   tip: {
@@ -22,9 +24,18 @@ const DailyTip: React.FC<DailyTipProps> = ({ tip }) => {
           </span>
         </div>
         
-        {tip.image && (
+        {tip.image ? (
           <div className="w-full h-40 overflow-hidden rounded-lg my-2">
-            <img src={tip.image} alt={tip.title} className="w-full h-full object-cover" />
+            <img 
+              src={tip.image} 
+              alt={tip.title} 
+              className="w-full h-full object-cover" 
+              loading="lazy"
+            />
+          </div>
+        ) : (
+          <div className="w-full h-40 overflow-hidden rounded-lg my-2 bg-gray-100 flex items-center justify-center">
+            <Image className="w-12 h-12 text-gray-300" />
           </div>
         )}
         

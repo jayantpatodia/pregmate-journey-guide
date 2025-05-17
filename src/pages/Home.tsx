@@ -6,6 +6,7 @@ import WeeklyUpdate from '@/components/WeeklyUpdate';
 import { usePregnancy } from '@/context/PregnancyContext';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 // Daily tips data
 const dailyTips = [
@@ -18,13 +19,20 @@ const dailyTips = [
   {
     title: 'Stay Hydrated',
     content: 'Aim for 8-10 glasses of water daily to support increased blood volume and amniotic fluid. Add a slice of lemon for flavor!',
-    category: 'Health'
+    category: 'Health',
+    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb'
   },
   {
     title: 'Gentle Morning Exercise',
     content: 'A 10-minute morning stretching routine can help reduce nausea and boost your energy for the day.',
     category: 'Exercise',
     image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7'
+  },
+  {
+    title: 'Connect with Your Baby',
+    content: 'Take a few minutes each day to talk or sing to your baby. This bonding time is beneficial for both of you!',
+    category: 'Wellbeing',
+    image: 'https://images.unsplash.com/photo-1518495973542-4542c06a5843'
   }
 ];
 
@@ -73,12 +81,20 @@ const Home = () => {
 
   return (
     <div className="pb-20 pt-6 px-4">
-      {/* Welcome message */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-pregbuddy-dark">
-          Hi, {userData.name || 'Mom'}! 👋
-        </h1>
-        <p className="text-gray-500">Here's your pregnancy update for today</p>
+      {/* Welcome message with avatar */}
+      <div className="mb-6 flex items-center">
+        <Avatar className="h-12 w-12 mr-3 border-2 border-pregbuddy-primary">
+          <AvatarImage src="https://images.unsplash.com/photo-1494790108377-be9c29b29330" alt={userData.name || 'Mom'} />
+          <AvatarFallback className="bg-pregbuddy-primary text-white">
+            {userData.name ? userData.name.charAt(0).toUpperCase() : 'M'}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <h1 className="text-2xl font-semibold text-pregbuddy-dark">
+            Hi, {userData.name || 'Mom'}! 👋
+          </h1>
+          <p className="text-gray-500">Here's your pregnancy update for today</p>
+        </div>
       </div>
       
       {/* Trial banner */}
